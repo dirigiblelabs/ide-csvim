@@ -13,33 +13,180 @@
 <head>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-
 	<title>CSVIM Editorr</title>
-
-	<!-- AngularJS -->
+	<link href="../../../../services/v4/web/resources/font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet">
 	<script src="../../../../services/v4/web/resources/angular/1.4.7/angular.min.js"></script>
 	<script src="../../../../services/v4/web/resources/angular/1.4.7/angular-resource.min.js"></script>
-
-	<!-- jQuery -->
 	<script src="../../../../services/v4/web/resources/jquery/3.4.1/jquery.min.js"></script>
-
-	<!-- Twitter Bootstrap with Theme Support -->
 	<link rel="stylesheet" href="../../../../services/v4/js/theme/resources.js/bootstrap.min.css">
 	<script src="../../../../services/v4/web/resources/bootstrap/3.3.7/bootstrap.min.js"></script>
-
-	<!-- MessageHub -->
 	<script src="../../../../services/v4/web/ide-core/ui/message-hub.js"></script>
-
-	<!-- Custom IDE Styles -->
 	<link type="text/css" rel="stylesheet" href="../../../../services/v4/js/theme/resources.js/ide.css" />
-
 	<!-- Project-specific stuff -->
 	<script src="js/editor.js"></script>
 	<link type="text/css" rel="stylesheet" href="css/editor.css" />
+	<link type="text/css" rel="stylesheet" href="css/dropdown.css" />
 
 </head>
 
-<body ng-app="csvim-editor" ng-controller="CsvimViewController" class="view">
+<body ng-app="csvim-editor" ng-controller="CsvimViewController" class="view editor-body"
+	ng-keydown="keyDownFunc($event)">
+	<div class="load-screen" ng-hide="dataLoaded">
+		<p class="text-center">Loading data...</p>
+		<div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="100" aria-valuemin="0"
+			aria-valuemax="100">
+		</div>
+	</div>
+	<div class="csvim-editor" ng-show="dataLoaded">
+		<div class="side-panel">
+			<div class="quick-actions-bar">
+				<input type="text" class="form-control" placeholder="Search..." ng-keyup="filterFiles()"
+					ng-model="filesSearch">
+			</div>
+				<div class="item-list">
+					<div class="list-item" ng-repeat="csv in csvimDataFiltered track by $index"
+						ng-class="{active:activeItemId==$index}" ng-click="fileSelected($index)">
+						<i class="fa fa-file-text-o" aria-hidden="true"></i>{{csv.name}}
+					</div>
+				</div>
+				<div class="side-panel-button" ng-click="addNew()">
+					<i class="fa fa-plus-circle" aria-hidden="true"></i>Add new file
+				</div>
+			</div>
+			<div class="main-panel" ng-hide="dataEmpty">
+				<div class="quick-actions-bar">
+					<button type="button" class="btn btn-default btn-actionbar btn-icon-left" title="Save"
+					ng-click="openFile(csvimData[activeItemId].file)">
+					<i class="fa fa-external-link" aria-hidden="true"></i> Open</button>
+					<button type="button" class="btn btn-default btn-actionbar btn-icon-left" title="Save"
+					ng-click="save()"><i class="fa fa-floppy-o"></i> Save</button>
+					<button type="button" class="btn btn-default btn-actionbar btn-icon-left" title="Edit"
+					ng-click="enableEdit()" ng-class="{'toggled': editDisabled === false}"><i class="fa fa-pencil"
+						aria-hidden="true"></i> Edit</button>
+					<button type="button" class="btn btn-default btn-actionbar btn-icon-left" title="Delete"
+					ng-click="deleteFile()"><i class="fa fa-trash" aria-hidden="true"></i> Delete</button>
+				</div>
+				<div class="csv-properties container-fluid">
+					<div class="row">
+						<div class="col-md-3">
+							<label for="table">Table</label>
+							<input type="text" class="form-control col-md-1" id="table" ng-model="csvimData[activeItemId].table"
+							ng-disabled="editDisabled" ng-keydown="fileChanged()">
+					</div>
+						</div>
+						<div class="row">
+							<div class="col-md-6">
+								<label for="schema">Schema</label>
+								<input type="text" class="form-control" id="schema" ng-model="csvimData[activeItemId].schema"
+							ng-disabled="editDisabled" ng-keydown="fileChanged()">
+					</div>
+							</div>
+							<div class="row">
+								<div class="col-md-6">
+									<label for="filepath">File path</label>
+									<input type="text" class="form-control" id="filepath" ng-model="csvimData[activeItemId].file"
+							ng-disabled="editDisabled" ng-keydown="fileChanged()">
+					</div>
+								</div>
+								<div class="row">
+									<div class="col-md-6">
+										<div class="form-check">
+											<input type="checkbox" class="form-check-input" id="header"
+								ng-model="csvimData[activeItemId].header" ng-disabled="editDisabled">
+											<label class="form-check-label" for="header">Header</label>
+										</div>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-md-6">
+										<div class="form-check">
+											<input type="checkbox" class="form-check-input" id="headerNames"
+								ng-model="csvimData[activeItemId].useHeaderNames" ng-disabled="editDisabled">
+											<label class="form-check-label" for="headerNames">Use header names</label>
+										</div>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-md-6">
+										<div class="form-check">
+											<input type="checkbox" class="form-check-input" id="distinguishEmptyFromNull"
+								ng-model="csvimData[activeItemId].distinguishEmptyFromNull" ng-disabled="editDisabled">
+											<label class="form-check-label" for="distinguishEmptyFromNull">Distinguish empty from
+								null</label>
+										</div>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-md-3">
+										<div class="dropdown-container">
+											<label>Delimiter</label>
+											<button class="btn btn-default btn-big dropdown-toggle" type="button" data-toggle="dropdown"
+								aria-haspopup="true" aria-expanded="false"
+								ng-disabled="editDisabled">{{csvimData[activeItemId].delimField}}<span
+									class="caret"></span></button>
+											<ul class="dropdown-menu dropdown-menu-searchable">
+												<li class="dropdown-item" ng-repeat="option in delimiterList"
+													ng-click="delimiterChanged(option)">
+													{{option}}</li>
+											</ul>
+										</div>
+									</div>
+									<div class="col-md-3">
+										<div class="dropdown-container">
+											<label>Quote character</label>
+											<button class="btn btn-default btn-big dropdown-toggle" type="button" data-toggle="dropdown"
+								aria-haspopup="true" aria-expanded="false"
+								ng-disabled="editDisabled">{{csvimData[activeItemId].delimEnclosing}}<span
+									class="caret"></span></button>
+											<ul class="dropdown-menu dropdown-menu-searchable">
+												<li class="dropdown-item" ng-repeat="option in quoteCharList"
+													ng-click="quoteCharChanged(option)">
+													{{option}}</li>
+											</ul>
+										</div>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-md-6">
+										<label>Keys</label>
+										<div class="keys">
+											<table class="table">
+												<tr>
+													<th>Column</th>
+													<th>Values</th>
+												</tr>
+												<tr ng-repeat="key in csvimData[activeItemId].keys track by $index">
+													<td>
+														<input type="text" class="table-input"
+														ng-model="csvimData[activeItemId].keys[$index].column" ng-disabled="editDisabled" ng-keydown="fileChanged()">
+													</td>
+													<td class="values">
+														<div
+															ng-repeat="val in csvimData[activeItemId].keys[$index].values track by $index">
+															<div class="value">
+																<input type="text" class="table-input"
+																ng-model="csvimData[activeItemId].keys[$parent.$index].values[$index]" ng-disabled="editDisabled" ng-keydown="fileChanged()">
+															</div>
+																<button ng-if="$last" type="button" ng-hide="editDisabled" class="btn btn-default values-button"
+																title="Add value" ng-click="addValueToKey(key.column)">Add value</button>
+															</div>
+															<button ng-if="csvimData[activeItemId].keys[$index].values.length == 0" type="button" ng-hide="editDisabled"
+															class="btn btn-default values-button" title="Add value" ng-click="addValueToKey(key.column)">Add value</button>
+													</td>
+												</tr>
+											</table>
+											<button type="button" ng-hide="editDisabled" class="btn btn-default keys-button" title="Add column" ng-click="addKeyColumn()">Add column</button>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="no-files-panel" ng-show="dataEmpty">
+						<p class="text-center">No files.</p>
+						<p class="text-center">Create a new file entry.</p>
+					</div>
+				</div>
 </body>
 
 </html>

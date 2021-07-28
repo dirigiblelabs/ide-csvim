@@ -1,0 +1,98 @@
+[
+    {
+        "table": "firstTable",
+        "schema": "firstSchema",
+        "file": "csv/firstTable.csv",
+        "header": false,
+        "useHeaderNames": false,
+        "delimField": ";",
+        "delimEnclosing": "\"",
+        "distinguishEmptyFromNull": true,
+        "keys": {
+            "GROUP_TYPE": [
+                "BW_CUBE",
+                "BW_DSO"
+            ]
+        }
+    },
+    {
+        "table": "secondTable",
+        "schema": "secondSchema",
+        "file": "csv/secondTable.csv",
+        "header": false,
+        "useHeaderNames": false,
+        "delimField": ";",
+        "delimEnclosing": "\"",
+        "distinguishEmptyFromNull": true,
+        "keys": {
+            "GROUP_TYPE": [
+                "BW_CUBE",
+                "BW_PSA"
+            ]
+        }
+    },
+    {
+        "table": "secondTable",
+        "schema": "secondSchema",
+        "file": "csv/inner/folder/test/too/much/secondTableasdasdfrgsdfaefsdf.csv",
+        "header": false,
+        "useHeaderNames": false,
+        "delimField": ";",
+        "delimEnclosing": "\"",
+        "distinguishEmptyFromNull": true,
+        "keys": {
+            "GROUP_TYPE": [
+                "BW_CUBE",
+                "BW_PSA"
+            ]
+        }
+    },
+    {
+        "table": "secondTable",
+        "schema": "secondSchema",
+        "file": "csv/secondTable.csv",
+        "header": false,
+        "useHeaderNames": false,
+        "delimField": ";",
+        "delimEnclosing": "\"",
+        "distinguishEmptyFromNull": true,
+        "keys": {
+            "GROUP_TYPE": [
+                "BW_CUBE",
+                "BW_PSA"
+            ]
+        }
+    },
+    {
+        "table": "secondTable",
+        "schema": "secondSchema",
+        "file": "csv/secondTable.csv",
+        "header": false,
+        "useHeaderNames": false,
+        "delimField": ";",
+        "delimEnclosing": "\"",
+        "distinguishEmptyFromNull": true,
+        "keys": {
+            "GROUP_TYPE": [
+                "BW_CUBE",
+                "BW_PSA"
+            ]
+        }
+    },
+    {
+        "table": "secondTable",
+        "schema": "secondSchema",
+        "file": "csv/secondTable.csv",
+        "header": false,
+        "useHeaderNames": false,
+        "delimField": ";",
+        "delimEnclosing": "\"",
+        "distinguishEmptyFromNull": true,
+        "keys": {
+            "GROUP_TYPE": [
+                "BW_CUBE",
+                "BW_PSA"
+            ]
+        }
+    }
+]
