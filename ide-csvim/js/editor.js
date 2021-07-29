@@ -25,11 +25,50 @@ csvimView.factory('$messageHub', [function () {
     };
 }]);
 
+csvimView.directive('uniqueField', () => {
+    return {
+        restrict: 'A',
+        require: 'ngModel',
+        link: (scope, element, attrs, controller) => {
+            controller.$validators.forbiddenName = value => {
+                let unique = true;
+                if ("index" in attrs) {
+                    for (let i = 0; i < scope.csvimData[scope.activeItemId].keys.length; i++) {
+                        if (i != attrs.index) {
+                            if (value === scope.csvimData[scope.activeItemId].keys[i].column) {
+                                unique = false;
+                                break;
+                            }
+                        }
+                    }
+                } else if ("kindex" in attrs && "vindex" in attrs) {
+                    for (let i = 0; i < scope.csvimData[scope.activeItemId].keys[attrs.kindex].values.length; i++) {
+                        if (i != attrs.vindex) {
+                            if (value === scope.csvimData[scope.activeItemId].keys[attrs.kindex].values[i]) {
+                                unique = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (unique) {
+                    element.removeClass("error-input");
+                } else {
+                    element.addClass('error-input');
+                }
+                scope.setSaveEnabled(unique);
+                return unique;
+            };
+        }
+    };
+});
+
 csvimView.controller('CsvimViewController', ['$scope', '$messageHub', '$window', function ($scope, $messageHub, $window) {
     let isFileChanged = false;
     const ctrlKey = 17;
     let ctrlDown = false;
     let isMac = false;
+    $scope.saveEnabled = true;
     $scope.editDisabled = true;
     $scope.dataEmpty = true;
     $scope.dataLoaded = false;
@@ -43,13 +82,17 @@ csvimView.controller('CsvimViewController', ['$scope', '$messageHub', '$window',
         let msg = {
             "file": {
                 "name": $scope.getFileName(filepath),
-                "path": `/workspace/${filepath}`,
+                "path": `${filepath}`,
                 "type": "file",
                 "contentType": "text/csv",
                 "label": $scope.getFileName(filepath)
             }
         };
         $messageHub.message('workspace.file.open', msg);
+    };
+
+    $scope.setSaveEnabled = function (enabled) {
+        $scope.saveEnabled = enabled;
     };
 
     $scope.enableEdit = function (disabled) {
@@ -107,12 +150,23 @@ csvimView.controller('CsvimViewController', ['$scope', '$messageHub', '$window',
     };
 
     $scope.addValueToKey = function (column) {
+        let num = 1;
         for (let i = 0; i < $scope.csvimData[$scope.activeItemId].keys.length; i++) {
             if ($scope.csvimData[$scope.activeItemId].keys[i].column === column) {
-                $scope.csvimData[$scope.activeItemId].keys[i].values.push("");
+                for (let k = 0; k < $scope.csvimData[$scope.activeItemId].keys[i].values.length; k++) {
+                    if ($scope.csvimData[$scope.activeItemId].keys[i].values[k] === `NEW_ENTRY_${num}`) {
+                        num++;
+                    }
+                }
+                $scope.csvimData[$scope.activeItemId].keys[i].values.push(`NEW_ENTRY_${num}`);
                 break;
             }
         }
+        $scope.fileChanged();
+    };
+
+    $scope.removeValueFromKey = function (columnIndex, valueIndex) {
+        $scope.csvimData[$scope.activeItemId].keys[columnIndex].values.splice(valueIndex, 1);
         $scope.fileChanged();
     };
 
@@ -132,8 +186,13 @@ csvimView.controller('CsvimViewController', ['$scope', '$messageHub', '$window',
         $scope.fileChanged();
     };
 
+    $scope.removeKeyColumn = function (index) {
+        $scope.csvimData[$scope.activeItemId].keys.splice(index, 1);
+        $scope.fileChanged();
+    };
+
     $scope.save = function () {
-        if (isFileChanged) {
+        if (isFileChanged && $scope.saveEnabled) {
             $scope.csvimData[$scope.activeItemId].name = $scope.getFileName($scope.csvimData[$scope.activeItemId].file, false);
             let csvim = [];
             for (let i = 0; i < $scope.csvimData.length; i++) {

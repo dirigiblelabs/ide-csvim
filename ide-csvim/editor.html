@@ -59,7 +59,7 @@
 					ng-click="openFile(csvimData[activeItemId].file)">
 					<i class="fa fa-external-link" aria-hidden="true"></i> Open</button>
 					<button type="button" class="btn btn-default btn-actionbar btn-icon-left" title="Save"
-					ng-click="save()"><i class="fa fa-floppy-o"></i> Save</button>
+					ng-click="save()" ng-disabled="!saveEnabled"><i class="fa fa-floppy-o"></i> Save</button>
 					<button type="button" class="btn btn-default btn-actionbar btn-icon-left" title="Edit"
 					ng-click="enableEdit()" ng-class="{'toggled': editDisabled === false}"><i class="fa fa-pencil"
 						aria-hidden="true"></i> Edit</button>
@@ -157,21 +157,25 @@
 												</tr>
 												<tr ng-repeat="key in csvimData[activeItemId].keys track by $index">
 													<td>
-														<input type="text" class="table-input"
-														ng-model="csvimData[activeItemId].keys[$index].column" ng-disabled="editDisabled" ng-keydown="fileChanged()">
+														<div class="input-cell">
+														<input index="{{$index}}" type="text" class="table-input"
+														ng-model="csvimData[activeItemId].keys[$index].column" ng-disabled="editDisabled" ng-keydown="fileChanged()" unique-field>
+														<button type="button" ng-hide="editDisabled" class="btn btn-default button-borderless pull-right"
+															title="Delete" ng-click="removeKeyColumn($index)"><i class="fa fa-trash-o" aria-hidden="true"></i></button>
+														</div>
 													</td>
-													<td class="values">
-														<div
+													<td class="column-values">
+														<div class="input-cell"
 															ng-repeat="val in csvimData[activeItemId].keys[$index].values track by $index">
-															<div class="value">
-																<input type="text" class="table-input"
+															<div class="column-value">
+																<input type="text" class="table-input" kindex="{{$parent.$index}}" vindex="{{$index}}" unique-field
 																ng-model="csvimData[activeItemId].keys[$parent.$index].values[$index]" ng-disabled="editDisabled" ng-keydown="fileChanged()">
+																<button type="button" ng-hide="editDisabled" class="btn btn-default button-borderless pull-right"
+																title="Delete" ng-click="removeValueFromKey($parent.$index, $index)"><i class="fa fa-trash-o" aria-hidden="true"></i></button>
 															</div>
-																<button ng-if="$last" type="button" ng-hide="editDisabled" class="btn btn-default values-button"
-																title="Add value" ng-click="addValueToKey(key.column)">Add value</button>
-															</div>
-															<button ng-if="csvimData[activeItemId].keys[$index].values.length == 0" type="button" ng-hide="editDisabled"
-															class="btn btn-default values-button" title="Add value" ng-click="addValueToKey(key.column)">Add value</button>
+														</div>
+														<button type="button" ng-hide="editDisabled"
+														class="btn btn-default values-button" title="Add value" ng-click="addValueToKey(key.column)">Add value</button>
 													</td>
 												</tr>
 											</table>
