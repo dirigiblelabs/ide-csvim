@@ -68,6 +68,9 @@ csvimView.controller('CsvimViewController', ['$scope', '$messageHub', '$window',
     const ctrlKey = 17;
     let ctrlDown = false;
     let isMac = false;
+    var csrfToken;
+    var contents;
+    $scope.fileExists = true;
     $scope.saveEnabled = true;
     $scope.editDisabled = true;
     $scope.dataEmpty = true;
@@ -79,16 +82,18 @@ csvimView.controller('CsvimViewController', ['$scope', '$messageHub', '$window',
     $scope.quoteCharList = ["'", "\""];
 
     $scope.openFile = function (filepath) {
-        let msg = {
-            "file": {
-                "name": $scope.getFileName(filepath),
-                "path": `${filepath}`,
-                "type": "file",
-                "contentType": "text/csv",
-                "label": $scope.getFileName(filepath)
-            }
-        };
-        $messageHub.message('workspace.file.open', msg);
+        if ($scope.checkResource(filepath)) {
+            let msg = {
+                "file": {
+                    "name": $scope.getFileName(filepath),
+                    "path": `${filepath}`,
+                    "type": "file",
+                    "contentType": "text/csv",
+                    "label": $scope.getFileName(filepath)
+                }
+            };
+            $messageHub.message('workspace.file.open', msg);
+        }
     };
 
     $scope.setSaveEnabled = function (enabled) {
@@ -136,6 +141,7 @@ csvimView.controller('CsvimViewController', ['$scope', '$messageHub', '$window',
 
     $scope.fileSelected = function (id) {
         $scope.enableEdit(true);
+        $scope.fileExists = true;
         $scope.activeItemId = id;
     };
 
@@ -193,6 +199,7 @@ csvimView.controller('CsvimViewController', ['$scope', '$messageHub', '$window',
 
     $scope.save = function () {
         if (isFileChanged && $scope.saveEnabled) {
+            $scope.checkResource($scope.csvimData[$scope.activeItemId].file);
             $scope.csvimData[$scope.activeItemId].name = $scope.getFileName($scope.csvimData[$scope.activeItemId].file, false);
             let csvim = [];
             for (let i = 0; i < $scope.csvimData.length; i++) {
@@ -258,6 +265,22 @@ csvimView.controller('CsvimViewController', ['$scope', '$messageHub', '$window',
         else if ($event.keyCode == ctrlKey)
             ctrlDown = true;
     });
+
+    $scope.checkResource = function (resourcePath) {
+        if (resourcePath != "") {
+            let xhr = new XMLHttpRequest();
+            xhr.open('HEAD', `../../../../../../services/v4/ide/workspaces${resourcePath}`, false);
+            xhr.setRequestHeader('X-CSRF-Token', 'Fetch');
+            xhr.send();
+            if (xhr.status === 200) {
+                csrfToken = xhr.getResponseHeader("x-csrf-token");
+                $scope.fileExists = true;
+                return true;
+            }
+        }
+        $scope.fileExists = false;
+        return false;
+    }
 
     function getResource(resourcePath) {
         let xhr = new XMLHttpRequest();

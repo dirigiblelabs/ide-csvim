@@ -84,7 +84,7 @@
 							<div class="row">
 								<div class="col-md-6">
 									<label for="filepath">File path</label>
-									<input type="text" class="form-control" id="filepath" ng-model="csvimData[activeItemId].file"
+									<input type="text" class="form-control" ng-class="{'error-input':fileExists===false}" id="filepath" ng-model="csvimData[activeItemId].file"
 							ng-disabled="editDisabled" ng-keydown="fileChanged()">
 					</div>
 								</div>
