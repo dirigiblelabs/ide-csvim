@@ -207,13 +207,7 @@ csvimView.controller('CsvimViewController', ['$scope', '$messageHub', '$window',
         if (isFileChanged && $scope.saveEnabled) {
             $scope.checkResource($scope.csvimData[$scope.activeItemId].file);
             $scope.csvimData[$scope.activeItemId].name = $scope.getFileName($scope.csvimData[$scope.activeItemId].file, false);
-            let csvim = [];
-            for (let i = 0; i < $scope.csvimData.length; i++) {
-                let temp = JSON.parse(JSON.stringify($scope.csvimData[i]));
-                delete temp.name;
-                csvim.push(temp);
-            }
-            saveContents(angular.toJson(csvim, true));
+            saveContents(JSON.stringify($scope.csvimData, cleanForOutput, 2));
         }
     };
 
@@ -286,6 +280,16 @@ csvimView.controller('CsvimViewController', ['$scope', '$messageHub', '$window',
         }
         $scope.fileExists = false;
         return false;
+    }
+
+    /**
+     * Used for removing some keys from the object before turning it into a string.
+     */
+    function cleanForOutput(key, value) {
+        if (key === 'name') {
+            return undefined;
+        }
+        return value;
     }
 
     function getResource(resourcePath) {
