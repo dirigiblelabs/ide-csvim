@@ -72,7 +72,7 @@ csvimView.controller('CsvimViewController', ['$scope', '$messageHub', '$window',
     var contents;
     $scope.fileExists = true;
     $scope.saveEnabled = true;
-    $scope.editDisabled = true;
+    $scope.editEnabled = false;
     $scope.dataEmpty = true;
     $scope.dataLoaded = false;
     $scope.csvimData = [];
@@ -81,18 +81,23 @@ csvimView.controller('CsvimViewController', ['$scope', '$messageHub', '$window',
     $scope.delimiterList = [',', '\\t', '|', ';'];
     $scope.quoteCharList = ["'", "\""];
 
-    $scope.openFile = function (filepath) {
-        if ($scope.checkResource(filepath)) {
+    $scope.openFile = function () {
+        if ($scope.checkResource($scope.csvimData[$scope.activeItemId].file)) {
             let msg = {
                 "file": {
-                    "name": $scope.getFileName(filepath),
-                    "path": `${filepath}`,
+                    "name": $scope.csvimData[$scope.activeItemId].name,
+                    "path": $scope.csvimData[$scope.activeItemId].file,
                     "type": "file",
                     "contentType": "text/csv",
-                    "label": $scope.getFileName(filepath)
+                    "label": $scope.csvimData[$scope.activeItemId].name
+                },
+                "extraArgs": {
+                    "header": $scope.csvimData[$scope.activeItemId].header,
+                    "delimiter": $scope.csvimData[$scope.activeItemId].delimField,
+                    "quotechar": $scope.csvimData[$scope.activeItemId].delimEnclosing
                 }
             };
-            $messageHub.message('workspace.file.open', msg);
+            $messageHub.message('ide-core.openEditor', msg);
         }
     };
 
@@ -100,11 +105,11 @@ csvimView.controller('CsvimViewController', ['$scope', '$messageHub', '$window',
         $scope.saveEnabled = enabled;
     };
 
-    $scope.enableEdit = function (disabled) {
-        if (disabled != undefined) {
-            $scope.editDisabled = disabled;
+    $scope.setEditEnabled = function (enabled) {
+        if (enabled != undefined) {
+            $scope.editEnabled = enabled;
         } else {
-            $scope.editDisabled = !$scope.editDisabled;
+            $scope.editEnabled = !$scope.editEnabled;
         }
     };
 
@@ -127,6 +132,7 @@ csvimView.controller('CsvimViewController', ['$scope', '$messageHub', '$window',
         $scope.csvimDataFiltered = $scope.csvimData;
         $scope.activeItemId = $scope.csvimData.length - 1;
         $scope.dataEmpty = false;
+        $scope.setEditEnabled(false);
         $scope.fileChanged();
     };
 
@@ -140,7 +146,7 @@ csvimView.controller('CsvimViewController', ['$scope', '$messageHub', '$window',
     };
 
     $scope.fileSelected = function (id) {
-        $scope.enableEdit(true);
+        $scope.setEditEnabled(false);
         $scope.fileExists = true;
         $scope.activeItemId = id;
     };
@@ -303,19 +309,23 @@ csvimView.controller('CsvimViewController', ['$scope', '$messageHub', '$window',
     function load() {
         let searchParams = new URLSearchParams(window.location.search);
         $scope.file = searchParams.get('file');
-        contents = loadContents($scope.file);
-        $scope.csvimData = JSON.parse(contents);
-        for (let i = 0; i < $scope.csvimData.length; i++) {
-            $scope.csvimData[i]["name"] = $scope.getFileName($scope.csvimData[i].file, false);
-        }
-        $scope.csvimDataFiltered = $scope.csvimData;
-        $scope.activeItemId = 0;
-        if ($scope.csvimData.length > 0) {
-            $scope.dataEmpty = false;
+        if ($scope.file) {
+            contents = loadContents($scope.file);
+            $scope.csvimData = JSON.parse(contents);
+            for (let i = 0; i < $scope.csvimData.length; i++) {
+                $scope.csvimData[i]["name"] = $scope.getFileName($scope.csvimData[i].file, false);
+            }
+            $scope.csvimDataFiltered = $scope.csvimData;
+            $scope.activeItemId = 0;
+            if ($scope.csvimData.length > 0) {
+                $scope.dataEmpty = false;
+            } else {
+                $scope.dataEmpty = true;
+            }
+            $scope.dataLoaded = true;
         } else {
-            $scope.dataEmpty = true;
+            console.error('file parameter is not present in the URL');
         }
-        $scope.dataLoaded = true;
     }
 
     function saveContents(text) {
