@@ -69,7 +69,7 @@
 .quick-actions-bar .btn-actionbar:hover {
   background-color: #d4d4d4;
 }
-.quick-actions-bar .btn-icon-left>i {
+.quick-actions-bar .btn-icon-left > i {
   margin-right: 6px;
 }
 .editor-body {
@@ -121,7 +121,7 @@
 .side-panel-button:active {
   background: #c9c9c9;
 }
-.side-panel-button>i {
+.side-panel-button > i {
   margin-right: 14px;
   /* Font awesome fix */
   margin-left: 1px;
@@ -133,7 +133,7 @@
   overflow-x: hidden;
   text-overflow: ellipsis;
 }
-.item-list>.active:first-child {
+.item-list > .active:first-child {
   border-top: 1px solid transparent;
 }
 .list-item {
@@ -146,7 +146,7 @@
   overflow: hidden;
   white-space: nowrap;
 }
-.list-item>i {
+.list-item > i {
   margin-right: 14px;
 }
 .list-item.active {
@@ -166,6 +166,9 @@
   height: auto;
   padding: 10px 12px 10px 12px;
   font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
 }
 .csv-properties label {
   margin-top: 14px;
@@ -180,22 +183,28 @@
 .keys {
   margin-bottom: 14px;
 }
-.keys>.table {
+.keys > .table {
   margin: 0;
   border: 1px solid #e7e7e7;
 }
-.keys>.table td,
+.keys > .table td,
 th {
   padding: 10px;
   border-right: 1px solid #e7e7e7;
 }
-.keys>.table th {
+.keys > .table th {
   border-top: 0;
   padding: 12px !important;
 }
 .table .input-cell {
   display: flex;
   flex-direction: row;
+}
+.table .column-values .input-cell {
+  border-bottom: 1px solid #e7e7e7;
+}
+.table .column-values .input-cell:last-of-type {
+  border-bottom: 0;
 }
 .column-values {
   padding: 0 !important;
@@ -204,7 +213,6 @@ th {
 .column-value {
   width: 100%;
   padding: 10px;
-  border-bottom: 1px solid #e7e7e7;
 }
 .values-button {
   width: 100%;
@@ -212,6 +220,16 @@ th {
   padding: 12px;
   background-color: #f8f8f8;
   border-radius: 0;
+  border-top: 1px solid #e7e7e7;
+}
+.values-button:hover {
+  border-top: 1px solid #e7e7e7;
+}
+.values-button:focus {
+  border-top: 1px solid #e7e7e7;
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 0;
 }
 .button-borderless {
   background-color: transparent;
@@ -226,10 +244,15 @@ th {
   border-radius: 0;
 }
 .keys-button:hover {
-  border: 1px solid #e7e7e7;
+  border-left: 1px solid #e7e7e7;
+  border-right: 1px solid #e7e7e7;
+  border-bottom: 1px solid #e7e7e7;
 }
 .keys-button:focus {
-  border: 1px solid #d0d0d0;
+  border-top: 1px solid #e7e7e7;
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 0;
 }
 .table-input {
   border: none;
@@ -238,6 +261,9 @@ th {
   -webkit-box-shadow: none;
   -moz-box-shadow: none;
   box-shadow: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
 }
 .error-input,
 .error-input:focus {

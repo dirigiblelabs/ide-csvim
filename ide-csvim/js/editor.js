@@ -76,7 +76,6 @@ csvimView.controller('CsvimViewController', ['$scope', '$messageHub', '$window',
     $scope.dataEmpty = true;
     $scope.dataLoaded = false;
     $scope.csvimData = [];
-    $scope.csvimDataFiltered = [];
     $scope.activeItemId = 0;
     $scope.delimiterList = [',', '\\t', '|', ';'];
     $scope.quoteCharList = ["'", "\""];
@@ -116,6 +115,7 @@ csvimView.controller('CsvimViewController', ['$scope', '$messageHub', '$window',
     $scope.addNew = function () {
         let newCsv = {
             "name": "Untitled",
+            "visible": true,
             "table": "",
             "schema": "",
             "file": "",
@@ -128,8 +128,8 @@ csvimView.controller('CsvimViewController', ['$scope', '$messageHub', '$window',
         };
         // Clean search bar
         $scope.filesSearch = "";
+        $scope.filterFiles();
         $scope.csvimData.push(newCsv);
-        $scope.csvimDataFiltered = $scope.csvimData;
         $scope.activeItemId = $scope.csvimData.length - 1;
         $scope.dataEmpty = false;
         $scope.setEditEnabled(false);
@@ -141,8 +141,8 @@ csvimView.controller('CsvimViewController', ['$scope', '$messageHub', '$window',
             return str.split('\\').pop().split('/').pop();
         }
         let title = str.split('\\').pop().split('/').pop();
-        if (title) return title
-        else return "Untitled"
+        if (title) return title;
+        else return "Untitled";
     };
 
     $scope.fileSelected = function (id) {
@@ -162,15 +162,18 @@ csvimView.controller('CsvimViewController', ['$scope', '$messageHub', '$window',
     };
 
     $scope.addValueToKey = function (column) {
-        let num = 1;
+        let entry_num = 1;
         for (let i = 0; i < $scope.csvimData[$scope.activeItemId].keys.length; i++) {
             if ($scope.csvimData[$scope.activeItemId].keys[i].column === column) {
                 for (let k = 0; k < $scope.csvimData[$scope.activeItemId].keys[i].values.length; k++) {
-                    if ($scope.csvimData[$scope.activeItemId].keys[i].values[k] === `NEW_ENTRY_${num}`) {
-                        num++;
+                    let num = getNumber(
+                        $scope.csvimData[$scope.activeItemId].keys[i].values[k].replace("NEW_ENTRY_", '')
+                    );
+                    if (!isNaN(num) && num >= entry_num) {
+                        entry_num = num + 1;
                     }
                 }
-                $scope.csvimData[$scope.activeItemId].keys[i].values.push(`NEW_ENTRY_${num}`);
+                $scope.csvimData[$scope.activeItemId].keys[i].values.push(`NEW_ENTRY_${entry_num}`);
                 break;
             }
         }
@@ -213,29 +216,30 @@ csvimView.controller('CsvimViewController', ['$scope', '$messageHub', '$window',
 
     $scope.deleteFile = function () {
         // Clean search bar
-        $scope.filesSearch = "";
         $scope.csvimData.splice($scope.activeItemId, 1);
-        $scope.activeItemId = 0;
-        $scope.csvimDataFiltered = $scope.csvimData;
         if ($scope.csvimData.length > 0) {
             $scope.dataEmpty = false;
+            $scope.activeItemId = $scope.csvimData.length - 1;
         } else {
             $scope.dataEmpty = true;
+            $scope.activeItemId = 0;
         }
         $scope.fileChanged();
     };
 
     $scope.filterFiles = function () {
         if ($scope.filesSearch) {
-            let filtered = [];
             for (let i = 0; i < $scope.csvimData.length; i++) {
                 if ($scope.csvimData[i].name.toLowerCase().includes($scope.filesSearch.toLowerCase())) {
-                    filtered.push($scope.csvimData[i]);
+                    $scope.csvimData[i].visible = true;
+                } else {
+                    $scope.csvimData[i].visible = false;
                 }
             }
-            $scope.csvimDataFiltered = filtered;
         } else {
-            $scope.csvimDataFiltered = $scope.csvimData;
+            for (let i = 0; i < $scope.csvimData.length; i++) {
+                $scope.csvimData[i].visible = true;
+            }
         }
     };
 
@@ -282,11 +286,20 @@ csvimView.controller('CsvimViewController', ['$scope', '$messageHub', '$window',
         return false;
     }
 
+    function getNumber(str) {
+        if (typeof str != "string") return NaN;
+        let strNum = parseFloat(str);
+        // use type coercion to parse the _entirety_ of the string (`parseFloat` alone does not do this) and ensure strings of whitespace fail
+        let isNumber = !isNaN(str) && !isNaN(strNum);
+        if (isNumber) return strNum;
+        else return NaN;
+    }
+
     /**
      * Used for removing some keys from the object before turning it into a string.
      */
     function cleanForOutput(key, value) {
-        if (key === 'name') {
+        if (key === "name" || key === "visible") {
             return undefined;
         }
         return value;
@@ -318,8 +331,8 @@ csvimView.controller('CsvimViewController', ['$scope', '$messageHub', '$window',
             $scope.csvimData = JSON.parse(contents);
             for (let i = 0; i < $scope.csvimData.length; i++) {
                 $scope.csvimData[i]["name"] = $scope.getFileName($scope.csvimData[i].file, false);
+                $scope.csvimData[i]["visible"] = true;
             }
-            $scope.csvimDataFiltered = $scope.csvimData;
             $scope.activeItemId = 0;
             if ($scope.csvimData.length > 0) {
                 $scope.dataEmpty = false;

@@ -44,8 +44,8 @@
 					ng-model="filesSearch">
 			</div>
 			<div class="item-list">
-				<div class="list-item" ng-repeat="csv in csvimDataFiltered track by $index"
-					ng-class="{active:activeItemId==$index}" ng-click="fileSelected($index)">
+				<div class="list-item" ng-repeat="csv in csvimData track by $index"
+					ng-class="{active:activeItemId==$index}" ng-click="fileSelected($index)" ng-show="csv.visible">
 					<i class="fa fa-file-text-o" aria-hidden="true"></i>{{csv.name}}
 				</div>
 			</div>
