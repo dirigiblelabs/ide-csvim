@@ -286,6 +286,15 @@ csvimView.controller('CsvimViewController', ['$scope', '$messageHub', '$window',
         return false;
     }
 
+    $scope.isDarkMode = function () {
+        const value = `; ${document.cookie}`;
+        const parts = value.split("; dirigible-theme=");
+        if (parts.length === 2 && parts.pop().split(';').shift() === "default") {
+            return true;
+        }
+        else return false;
+    }
+
     function getNumber(str) {
         if (typeof str != "string") return NaN;
         let strNum = parseFloat(str);
