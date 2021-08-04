@@ -329,6 +329,7 @@ csvimView.controller('CsvimViewController', ['$scope', '$http', '$messageHub', '
             $http.get('../../../../../../services/v4/ide/workspaces' + $scope.file)
                 .then(function (response) {
                     contents = response.data;
+                    if (!contents) contents = [];
                     $scope.csvimData = contents;
                     for (let i = 0; i < $scope.csvimData.length; i++) {
                         $scope.csvimData[i]["name"] = $scope.getFileName($scope.csvimData[i].file, false);
