@@ -413,8 +413,8 @@ editorView.controller('CsvimViewController', ['$scope', '$http', '$messageHub', 
     }
 
     function getCurrentWorkspace() { // This needs to be replaced with an API
-        let currentWorkspace = JSON.parse(localStorage.getItem('DIRIGIBLE.workspace') || '{}');
-        if (currentWorkspace !== {}) workspace = currentWorkspace.name;
+        let storedWorkspace = JSON.parse(localStorage.getItem('DIRIGIBLE.workspace') || '{}');
+        if ('name' in storedWorkspace) workspace = currentWorkspace.name;
     }
 
     getCurrentWorkspace();
