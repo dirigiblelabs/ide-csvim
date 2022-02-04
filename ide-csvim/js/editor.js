@@ -403,8 +403,8 @@ editorView.controller('CsvimViewController', ['$scope', '$http', '$messageHub', 
     }
 
     function getViewParameters() {
-        if (window.frameElement.hasAttribute("parameters")) {
-            let params = JSON.parse(window.frameElement.getAttribute("parameters"));
+        if (window.frameElement.hasAttribute("data-parameters")) {
+            let params = JSON.parse(window.frameElement.getAttribute("data-parameters"));
             $scope.file = params["file"];
         } else {
             let searchParams = new URLSearchParams(window.location.search);
