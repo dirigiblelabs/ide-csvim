@@ -145,8 +145,8 @@ editorView.controller('CsvimViewController', ['$scope', '$http', '$messageHub', 
     $scope.openFile = function () {
         if ($scope.checkResource($scope.csvimData[$scope.activeItemId].file)) {
             let msg = {
+                "editor": "csv-editor",
                 "file": {
-                    "name": $scope.csvimData[$scope.activeItemId].name,
                     "path": `/${workspace}${$scope.csvimData[$scope.activeItemId].file}`,
                     "type": "file",
                     "contentType": "text/csv",
