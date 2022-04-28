@@ -28,6 +28,10 @@ editorView.factory('$messageHub', [function () {
     let message = function (evtName, data) {
         messageHub.post({ data: data }, evtName);
     };
+    // Temp thing
+    let post = function (data, evtName) {
+        messageHub.post(data, evtName);
+    };
     let on = function (topic, callback) {
         messageHub.subscribe(callback, topic);
     };
@@ -35,7 +39,8 @@ editorView.factory('$messageHub', [function () {
         announceAlert: announceAlert,
         announceAlertError: announceAlertError,
         message: message,
-        on: on
+        post: post,
+        on: on,
     };
 }]);
 
@@ -141,6 +146,11 @@ editorView.controller('CsvimViewController', ['$scope', '$http', '$messageHub', 
     $scope.activeItemId = 0;
     $scope.delimiterList = [',', '\\t', '|', ';', '#'];
     $scope.quoteCharList = ["'", "\"", "#"];
+
+    angular.element($window).bind("focus", function () {
+        $messageHub.post({ data: { file: $scope.file } }, 'editor.focus.gained');
+        $messageHub.post({ text: '' }, 'ide.status.caret');
+    });
 
     $scope.openFile = function () {
         if ($scope.checkResource($scope.csvimData[$scope.activeItemId].file)) {
@@ -340,7 +350,7 @@ editorView.controller('CsvimViewController', ['$scope', '$http', '$messageHub', 
 
     $scope.fileChanged = function () {
         isFileChanged = true;
-        $messageHub.message('editor.file.dirty', $scope.file);
+        $messageHub.post({ resourcePath: $scope.file, isDirty: isFileChanged }, 'ide-core.setEditorDirty');
     };
 
     $scope.keyDownFunc = function ($event) {
@@ -436,6 +446,9 @@ editorView.controller('CsvimViewController', ['$scope', '$http', '$messageHub', 
                 }, function (response) {
                     if (response.data) {
                         if ("error" in response.data) {
+                            $messageHub.post({
+                                message: `Error loading '${$scope.file}'`
+                            }, 'ide.status.error');
                             console.error("Loading file:", response.data.error.message);
                         }
                     } else {
@@ -459,9 +472,16 @@ editorView.controller('CsvimViewController', ['$scope', '$http', '$messageHub', 
             xhr.setRequestHeader('X-CSRF-Token', csrfToken);
             xhr.onreadystatechange = function () {
                 if (xhr.readyState === 4) {
-                    $messageHub.message('editor.file.saved', $scope.file);
-                    $messageHub.message('status.message', 'File [' + $scope.file.split("/").pop() + '] saved.');
+                    $messageHub.post({ data: $scope.file }, 'editor.file.saved');
+                    $messageHub.post({ message: `File '${$scope.file}' saved` }, 'ide.status.message');
+                    $messageHub.post({ resourcePath: $scope.file, isDirty: false }, 'ide-core.setEditorDirty');
                 }
+            };
+            xhr.onerror = function (error) {
+                console.error(`Error saving '${$scope.file}'`, error);
+                $messageHub.post({
+                    message: `Error saving '${$scope.file}'`
+                }, 'ide.status.error');
             };
             xhr.send(text);
             isFileChanged = false;
@@ -480,6 +500,15 @@ editorView.controller('CsvimViewController', ['$scope', '$http', '$messageHub', 
         let storedWorkspace = JSON.parse(localStorage.getItem('DIRIGIBLE.workspace') || '{}');
         if ('name' in storedWorkspace) workspace = storedWorkspace.name;
     }
+
+    $messageHub.on(
+        "editor.file.save.all",
+        function () {
+            if (isFileChanged) {
+                $scope.save();
+            }
+        },
+    );
 
     getCurrentWorkspace();
     checkPlatform();
