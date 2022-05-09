@@ -15,8 +15,7 @@ const editorData = {
 	region: "center",
 	label: "CSVIM Editor",
 	link: "../ide-csvim/editor.html",
-	defaultEditor: true,
-	contentTypes: ["application/json+csvim"]
+	contentTypes: ["application/json+csvim"],
 };
 if (typeof exports !== 'undefined') {
 	exports.getEditor = function () {
