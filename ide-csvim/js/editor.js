@@ -154,21 +154,16 @@ editorView.controller('CsvimViewController', ['$scope', '$http', '$messageHub', 
 
     $scope.openFile = function () {
         if ($scope.checkResource($scope.csvimData[$scope.activeItemId].file)) {
-            let msg = {
-                "editor": "csv-editor",
-                "file": {
-                    "path": `/${workspace}${$scope.csvimData[$scope.activeItemId].file}`,
-                    "type": "file",
-                    "contentType": "text/csv",
-                    "label": $scope.csvimData[$scope.activeItemId].name
-                },
-                "extraArgs": {
+            $messageHub.post({
+                resourcePath: `/${workspace}${$scope.csvimData[$scope.activeItemId].file}`,
+                resourceLabel: $scope.csvimData[$scope.activeItemId].name,
+                contentType: "text/csv",
+                extraArgs: {
                     "header": $scope.csvimData[$scope.activeItemId].header,
                     "delimiter": $scope.csvimData[$scope.activeItemId].delimField,
                     "quotechar": $scope.csvimData[$scope.activeItemId].delimEnclosing
-                }
-            };
-            $messageHub.message('ide-core.openEditor', msg);
+                },
+            }, 'ide-core.openEditor');
         }
     };
 
@@ -472,7 +467,12 @@ editorView.controller('CsvimViewController', ['$scope', '$http', '$messageHub', 
             xhr.setRequestHeader('X-CSRF-Token', csrfToken);
             xhr.onreadystatechange = function () {
                 if (xhr.readyState === 4) {
-                    $messageHub.post({ data: $scope.file }, 'editor.file.saved');
+                    $messageHub.post({
+                        name: $scope.file.substring($scope.file.lastIndexOf('/') + 1),
+                        path: $scope.file.substring($scope.file.indexOf('/', 1)),
+                        contentType: 'application/json+csvim', // TODO: Take this from data-parameters
+                        workspace: $scope.file.substring(1, $scope.file.indexOf('/', 1)),
+                    }, 'ide.file.saved');
                     $messageHub.post({ message: `File '${$scope.file}' saved` }, 'ide.status.message');
                     $messageHub.post({ resourcePath: $scope.file, isDirty: false }, 'ide-core.setEditorDirty');
                 }
@@ -482,6 +482,10 @@ editorView.controller('CsvimViewController', ['$scope', '$http', '$messageHub', 
                 $messageHub.post({
                     message: `Error saving '${$scope.file}'`
                 }, 'ide.status.error');
+                $messageHub.announceAlertError(
+                    "Error while saving the file",
+                    "Please look at the console for more information"
+                );
             };
             xhr.send(text);
             isFileChanged = false;
@@ -499,6 +503,7 @@ editorView.controller('CsvimViewController', ['$scope', '$http', '$messageHub', 
     function getCurrentWorkspace() { // This needs to be replaced with an API
         let storedWorkspace = JSON.parse(localStorage.getItem('DIRIGIBLE.workspace') || '{}');
         if ('name' in storedWorkspace) workspace = storedWorkspace.name;
+        else workspace = 'workspace';
     }
 
     $messageHub.on(
@@ -507,6 +512,15 @@ editorView.controller('CsvimViewController', ['$scope', '$http', '$messageHub', 
             if (isFileChanged) {
                 $scope.save();
             }
+        },
+    );
+
+    $messageHub.on(
+        "editor.file.save",
+        function (msg) {
+            let file = msg.data && typeof msg.data === 'object' && msg.data.file;
+            if (file && file === $scope.file && isFileChanged)
+                $scope.save();
         },
     );
 
